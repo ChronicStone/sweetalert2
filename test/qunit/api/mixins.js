@@ -1,4 +1,5 @@
 const { Swal } = require('../helpers')
+const { SHOW_CLASS_TIMEOUT } = require('../../../src/utils/openPopup')
 
 QUnit.test('basic mixin', (assert) => {
   const done = assert.async()
@@ -40,4 +41,36 @@ QUnit.test('mixins and shorthand calls', (assert) => {
 QUnit.test('mixins precedence', (assert) => {
   Swal.mixin({ title: '1' }).mixin({ title: '2' }).fire()
   assert.equal(Swal.getTitle().textContent, '2')
+})
+
+QUnit.test('params from 2nd mixin should override params from 1st mixin', (assert) => {
+  const done = assert.async()
+  Swal
+    .mixin({ showClass: { popup: 'i-should-be-overriden' } })
+    .mixin({ showClass: { backdrop: 'backdrop-custom-show-class' } })
+    .fire({
+      didOpen: () => {
+        setTimeout(() => {
+          assert.ok(Swal.getContainer().classList.contains('backdrop-custom-show-class'))
+          assert.notOk(Swal.getPopup().classList.contains('i-should-be-overriden'))
+          done()
+        }, SHOW_CLASS_TIMEOUT)
+      }
+    })
+})
+
+QUnit.test('params from fire() should override params from mixin()', (assert) => {
+  const done = assert.async()
+  Swal
+    .mixin({ showClass: { popup: 'i-should-be-overriden' } })
+    .fire({
+      showClass: { backdrop: 'backdrop-custom-show-class' },
+      didOpen: () => {
+        setTimeout(() => {
+          assert.ok(Swal.getContainer().classList.contains('backdrop-custom-show-class'))
+          assert.notOk(Swal.getPopup().classList.contains('i-should-be-overriden'))
+          done()
+        }, SHOW_CLASS_TIMEOUT)
+      }
+    })
 })
